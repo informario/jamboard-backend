@@ -27,7 +27,7 @@ app.post("/", midware, (req,res)=>{
 
 app.post("/postelement", midware, (req, res) =>{
     elements.push(req.body)
-    console.log('response: ' +req.body)
+    //console.log('response: ' +req.body)
     res.sendStatus(200)
 })
 
@@ -37,4 +37,10 @@ app.post("/getelement",midware, (req, res) =>{
     }
     let element = elements[req.body.id]
     res.json(element)
+})
+app.post("/fetchall",midware, (req, res) =>{
+    if(elements.length==0){
+        res.sendStatus(200)
+    }
+    res.json(elements)
 })
