@@ -6,7 +6,7 @@ let app = express()
 const cors = require('cors')
 app.use(cors())
 //PORT
-const port = 3000
+const port = 3001
 app.listen(port, () => {
     console.log(`app listening on port ${port}`)
 })
@@ -16,16 +16,14 @@ midware = bodyParser.urlencoded({extended: false})
 app.use(bodyParser.json());
 
 let elements = []
-let id = 0;
 
 
 
-app.post("/postelement", midware, (req, res) =>{
+app.post("/postelement/:username", midware, (req, res) =>{
     elements.push(req.body)
-    elements[elements.length-1].date = Date.now();
-    elements[elements.length-1].id = id;
-    res.json({id:id})
-    id++;
+    elements[elements.length-1].username = req.params.username;
+    console.log(req.params.username)
+    res.sendStatus(200)
 })
 
 app.get("/getelement/:id", (req, res) =>{
@@ -45,8 +43,16 @@ app.post("/fetchall",midware, (req, res) =>{
         res.json(elements)
     }
 })
-app.delete(`/element/:id`, (req, res) =>{
-    console.log(req.params.id)
-    elements[id] = {}
+app.delete(`/element/:username`, (req, res) =>{
+    console.log(req.params.username)
+    for(let i= elements.length-1; i>=0; i--){
+        if("username" in elements[i]){
+            if(elements[i].username === req.params.username){
+                elements[i]={}
+                console.log(elements[i])
+                break
+            }
+        }
+    }
     res.sendStatus(200)
 })
