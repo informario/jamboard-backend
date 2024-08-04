@@ -15,32 +15,38 @@ let bodyParser = require('body-parser')
 midware = bodyParser.urlencoded({extended: false})
 app.use(bodyParser.json());
 
-let user_id = 0;
 let elements = []
-let users = []
+let id = 0;
 
-app.post("/", midware, (req,res)=>{
-    users.push(user_id)
-    user_id++
-    res.send({user_id:user_id})
-})
+
 
 app.post("/postelement", midware, (req, res) =>{
     elements.push(req.body)
-    //console.log('response: ' +req.body)
-    res.sendStatus(200)
+    elements[elements.length-1].date = Date.now();
+    elements[elements.length-1].id = id;
+    res.json({id:id})
+    id++;
 })
 
-app.post("/getelement",midware, (req, res) =>{
-    if(req.body.id>=elements.length || req.body.id<0){
-        res.sendStatus(200)
+app.get("/getelement/:id", (req, res) =>{
+    if(req.params.id>=elements.length || req.params.id<0){
+        res.sendStatus(204)
     }
-    let element = elements[req.body.id]
-    res.json(element)
+    else{
+        let element = elements[req.params.id]
+        res.json(element)
+    }
 })
 app.post("/fetchall",midware, (req, res) =>{
-    if(elements.length==0){
+    if(elements.length===0){
         res.sendStatus(200)
     }
-    res.json(elements)
+    else{
+        res.json(elements)
+    }
+})
+app.delete(`/element/:id`, (req, res) =>{
+    console.log(req.params.id)
+    elements[id] = {}
+    res.sendStatus(200)
 })
