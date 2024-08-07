@@ -36,7 +36,7 @@ app.get("/getelement/:id", (req, res) =>{
         res.sendStatus(204)
     }
     else{
-        let data
+        let data = {}
         data.elements = elements.slice(req.params.id, elements.length)
         data.size=  elements.length - req.params.id - 1
         res.json(data)
