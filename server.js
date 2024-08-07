@@ -55,20 +55,42 @@ app.delete(`/element/:username`, (req, res) =>{
     res.sendStatus(200)
 })
 
-app.get("/update", (req, res) =>{
-    pendingRequests.push(res);
+app.delete(`/deleteall`, (req, res) =>{
+    for(let i= elements.length-1; i>=0; i--){
+        elements[i]={}
+    }
+    //responder con update a todos
+    eventEmitter.emit('deleteOccurred');
+    res.sendStatus(200)
+})
 
+
+app.get("/update/:username", (req, res) =>{
+    pendingRequests.push(res);
+    pendingRequests[pendingRequests.length-1].username = req.params.username;
+    //console.log("recibida request update de: "+res.username);
+
+})
+
+app.get("/awake", (req, res) =>{
+    setTimeout(()=>{
+        res.sendStatus(200)
+    }, 50)
 })
 
 eventEmitter.on('deleteOccurred', () => {
     while (pendingRequests.length > 0) {
         const res = pendingRequests.pop();
+        //console.log("enviada respuesta delete a: "+res.username);
         res.send("delete");
     }
 });
 eventEmitter.on('newelementOccurred', () => {
     while (pendingRequests.length > 0) {
+        //console.log(pendingRequests.length);
         const res = pendingRequests.pop();
+        //console.log("enviada respuesta new a: "+res.username);
         res.send("newelement");
+
     }
 });
