@@ -14,6 +14,11 @@ app.listen(port, () => {
 let bodyParser = require('body-parser')
 midware = bodyParser.urlencoded({extended: false})
 app.use(bodyParser.json());
+//EVENTS
+const EventEmitter = require('events');
+const eventEmitter = new EventEmitter();
+let pendingRequests = [];
+
 
 let elements = []
 
@@ -22,7 +27,7 @@ let elements = []
 app.post("/postelement/:username", midware, (req, res) =>{
     elements.push(req.body)
     elements[elements.length-1].username = req.params.username;
-    console.log(req.params.username)
+    eventEmitter.emit('newelementOccurred');
     res.sendStatus(200)
 })
 
@@ -32,27 +37,38 @@ app.get("/getelement/:id", (req, res) =>{
     }
     else{
         let element = elements[req.params.id]
-        res.json(element)
+        res.json(elements.slice(req.params.id,elements.length))
     }
 })
-app.post("/fetchall",midware, (req, res) =>{
-    if(elements.length===0){
-        res.sendStatus(200)
-    }
-    else{
-        res.json(elements)
-    }
-})
+
 app.delete(`/element/:username`, (req, res) =>{
-    console.log(req.params.username)
     for(let i= elements.length-1; i>=0; i--){
         if("username" in elements[i]){
             if(elements[i].username === req.params.username){
                 elements[i]={}
-                console.log(elements[i])
                 break
             }
         }
     }
+    //responder con update a todos
+    eventEmitter.emit('deleteOccurred');
     res.sendStatus(200)
 })
+
+app.get("/update", (req, res) =>{
+    pendingRequests.push(res);
+
+})
+
+eventEmitter.on('deleteOccurred', () => {
+    while (pendingRequests.length > 0) {
+        const res = pendingRequests.pop();
+        res.send("delete");
+    }
+});
+eventEmitter.on('newelementOccurred', () => {
+    while (pendingRequests.length > 0) {
+        const res = pendingRequests.pop();
+        res.send("newelement");
+    }
+});
