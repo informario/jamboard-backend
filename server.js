@@ -18,8 +18,7 @@ app.use(bodyParser.json());
 const EventEmitter = require('events');
 const eventEmitter = new EventEmitter();
 let pendingRequests = [];
-
-
+let lastUpdate = { version: 0, data: null }
 let elements = []
 
 
@@ -67,9 +66,16 @@ app.delete(`/deleteall`, (req, res) =>{
 })
 
 
-app.get("/update/:username", (req, res) =>{
-    pendingRequests.push(res);
-    pendingRequests[pendingRequests.length-1].username = req.params.username;
+app.get("/update/:username/:version", (req, res) =>{
+    let userVersion = req.params.version
+
+    if(lastUpdate.version > userVersion){
+        res.send(lastUpdate)
+    }
+    else{
+        pendingRequests.push(res);
+        pendingRequests[pendingRequests.length-1].username = req.params.username;
+    }
     //console.log("recibida request update de: "+res.username);
 
 })
@@ -81,18 +87,22 @@ app.get("/awake", (req, res) =>{
 })
 
 eventEmitter.on('deleteOccurred', () => {
+    lastUpdate = {version:lastUpdate.version+1, data:'deleteOccurred'}
+    console.log(`version: ${lastUpdate.version}`);
     while (pendingRequests.length > 0) {
         const res = pendingRequests.pop();
         //console.log("enviada respuesta delete a: "+res.username);
-        res.send("delete");
+        res.send(lastUpdate);
     }
 });
 eventEmitter.on('newelementOccurred', () => {
+    lastUpdate = {version:lastUpdate.version+1, data:'newelementOccurred'}
+    console.log(`version: ${lastUpdate.version}`);
     while (pendingRequests.length > 0) {
         //console.log(pendingRequests.length);
         const res = pendingRequests.pop();
         //console.log("enviada respuesta new a: "+res.username);
-        res.send("newelement");
+        res.send(lastUpdate);
 
     }
 });
